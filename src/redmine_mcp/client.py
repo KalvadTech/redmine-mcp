@@ -7,6 +7,7 @@ from typing import Any
 
 import httpx
 
+from . import __version__ as _version
 from .errors import RedmineError
 
 _DEFAULT_TIMEOUT = httpx.Timeout(connect=5.0, read=30.0, write=30.0, pool=5.0)
@@ -36,7 +37,7 @@ class RedmineClient:
             headers={
                 "X-Redmine-API-Key": api_key,
                 "Accept": "application/json",
-                "User-Agent": "redmine-mcp/0.1",
+                "User-Agent": f"redmine-mcp/{_version}",
             },
             transport=transport,
         )
