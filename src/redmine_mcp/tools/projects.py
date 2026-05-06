@@ -38,16 +38,3 @@ def register(mcp: FastMCP) -> None:
         data = await client().get_json(f"/projects/{id}.json", params=params)
         return data.get("project", data)
 
-    @mcp.tool()
-    async def list_memberships(
-        project_id: int | str,
-        limit: int | None = None,
-        offset: int = 0,
-    ) -> dict[str, Any]:
-        """List user/group memberships for a project."""
-        return await client().paginate(
-            f"/projects/{project_id}/memberships.json",
-            "memberships",
-            limit=limit,
-            offset=offset,
-        )

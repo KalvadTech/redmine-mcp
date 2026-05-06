@@ -15,6 +15,8 @@ def register(mcp: FastMCP) -> None:
         assigned_to_id: int | str | None = None,
         tracker_id: int | None = None,
         category_id: int | None = None,
+        version_id: int | None = None,
+        query_id: int | None = None,
         query: str | None = None,
         sort: str | None = None,
         limit: int | None = None,
@@ -24,7 +26,8 @@ def register(mcp: FastMCP) -> None:
         """List issues with optional filters.
 
         status_id accepts an id, 'open', 'closed', or '*'. assigned_to_id
-        accepts an id or 'me'. include may contain: attachments, relations.
+        accepts an id or 'me'. query_id applies a saved query (see
+        list_queries). include may contain: attachments, relations.
         """
         params = {
             "project_id": project_id,
@@ -32,6 +35,8 @@ def register(mcp: FastMCP) -> None:
             "assigned_to_id": assigned_to_id,
             "tracker_id": tracker_id,
             "category_id": category_id,
+            "fixed_version_id": version_id,
+            "query_id": query_id,
             "subject": query,
             "sort": sort,
             "include": csv(include),
