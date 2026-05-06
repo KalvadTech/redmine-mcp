@@ -90,9 +90,10 @@ stays out of the config file: `REDMINE_API_KEY=... opencode`.
 
 ## Configuration
 
-| Variable      | Required | Default | Purpose                                          |
-| ------------- | -------- | ------- | ------------------------------------------------ |
-| `REDMINE_URL` | yes      | -       | Base URL of the Redmine instance (http or https) |
+| Variable             | Required | Default | Purpose                                                                                                                                                                                                                                                                                                                                                |
+| -------------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `REDMINE_URL`        | yes      | -       | Base URL of the Redmine instance (http or https).                                                                                                                                                                                                                                                                                                      |
+| `MCP_ALLOWED_HOSTS`  | no       | -       | Comma-separated list of `Host` headers this MCP server will accept (DNS-rebinding protection). Required when running behind a reverse proxy with a public hostname (`Invalid Host header` warnings otherwise). Bare entries also match `host:*`. Set to `*` to disable protection when the proxy already enforces hostnames. Empty keeps localhost-only defaults. |
 
 CLI flags on `redmine-mcp`:
 
