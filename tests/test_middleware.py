@@ -85,6 +85,46 @@ def test_load_base_url_accepts_http(monkeypatch: Any) -> None:
     assert load_base_url() == "http://localhost:3000"
 
 
+def test_lifespan_passes_through() -> None:
+    """Non-http scopes (lifespan, websocket) must bypass auth."""
+    seen: list[str] = []
+
+    async def downstream(scope: Any, receive: Any, send: Any) -> None:
+        seen.append(scope["type"])
+        if scope["type"] == "lifespan":
+            msg = await receive()
+            assert msg["type"] == "lifespan.startup"
+            await send({"type": "lifespan.startup.complete"})
+            msg = await receive()
+            assert msg["type"] == "lifespan.shutdown"
+            await send({"type": "lifespan.shutdown.complete"})
+
+    app = RedmineAuthMiddleware(downstream, base_url=BASE_URL)
+    with TestClient(app):
+        pass
+    assert "lifespan" in seen
+
+
+def test_concurrent_requests_get_separate_clients() -> None:
+    """Each request must bind its own RedmineClient instance to the
+    ContextVar; one request must not see another's client."""
+    seen: list[int] = []
+
+    async def probe(request: Request) -> JSONResponse:
+        c = get_redmine_client()
+        seen.append(id(c))
+        return JSONResponse({"id": id(c)})
+
+    app = Starlette(routes=[Route("/probe", probe)])
+    app.add_middleware(RedmineAuthMiddleware, base_url=BASE_URL)
+
+    with TestClient(app) as tc:
+        a = tc.get("/probe", headers={"X-Redmine-API-Key": GOOD_KEY}).json()["id"]
+        b = tc.get("/probe", headers={"X-Redmine-API-Key": GOOD_KEY}).json()["id"]
+    assert a != b
+    assert len(seen) == 2 and seen[0] != seen[1]
+
+
 @respx.mock
 def test_client_stays_open_during_streaming_response() -> None:
     """Regression: BaseHTTPMiddleware closed the per-request client before

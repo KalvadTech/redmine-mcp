@@ -72,3 +72,46 @@ async def test_upload_attachment(mcp) -> None:
     sent = route.calls.last.request
     assert sent.headers["Content-Type"] == "application/octet-stream"
     assert sent.read() == b"raw bytes"
+
+
+@respx.mock
+async def test_download_attachment_size_cap_exceeded(mcp) -> None:
+    respx.get(f"{BASE_URL}/attachments/3.json").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "attachment": {
+                    "id": 3,
+                    "filename": "big.bin",
+                    "content_url": "https://files.test/big.bin",
+                }
+            },
+        )
+    )
+    respx.get("https://files.test/big.bin").mock(
+        return_value=httpx.Response(200, content=b"X" * 4096)
+    )
+    with pytest.raises(Exception, match="exceeds max_bytes"):
+        await call(mcp, "download_attachment", id=3, max_bytes=1024)
+
+
+@respx.mock
+async def test_download_attachment_missing_content_url(mcp) -> None:
+    respx.get(f"{BASE_URL}/attachments/4.json").mock(
+        return_value=httpx.Response(
+            200, json={"attachment": {"id": 4, "filename": "x.txt"}}
+        )
+    )
+    with pytest.raises(Exception, match="content_url"):
+        await call(mcp, "download_attachment", id=4)
+
+
+@respx.mock
+async def test_upload_attachment_rejects_invalid_base64(mcp) -> None:
+    with pytest.raises(Exception, match="base64"):
+        await call(
+            mcp,
+            "upload_attachment",
+            filename="x.bin",
+            content_base64="not-valid-base64!",
+        )

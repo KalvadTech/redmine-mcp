@@ -37,8 +37,8 @@ async def bound_client() -> AsyncIterator[RedmineClient]:
         await client.aclose()
 
 
-async def call(mcp: FastMCP, name: str, **arguments: Any) -> Any:
-    result = await mcp.call_tool(name, arguments)
+async def call(mcp: FastMCP, tool_name: str, /, **arguments: Any) -> Any:
+    result = await mcp.call_tool(tool_name, arguments)
     if isinstance(result, tuple) and len(result) == 2:
         _, structured = result
         if structured is not None:

@@ -85,3 +85,39 @@ async def test_delete_issue(mcp) -> None:
     respx.delete(f"{BASE_URL}/issues/5.json").mock(return_value=httpx.Response(204))
     out = await call(mcp, "delete_issue", id=5)
     assert out == {"id": 5, "deleted": True}
+
+
+@respx.mock
+async def test_create_issue_with_uploads_and_custom_fields(mcp) -> None:
+    route = respx.post(f"{BASE_URL}/issues.json").mock(
+        return_value=httpx.Response(201, json={"issue": {"id": 11}})
+    )
+    await call(
+        mcp,
+        "create_issue",
+        project_id="p",
+        subject="hi",
+        custom_fields=[{"id": 1, "value": "foo"}],
+        watcher_user_ids=[2, 3],
+        uploads=[{"token": "abc.def", "filename": "x.txt", "content_type": "text/plain"}],
+    )
+    body = route.calls.last.request.read()
+    assert b'"custom_fields":[{"id":1,"value":"foo"}]' in body
+    assert b'"watcher_user_ids":[2,3]' in body
+    assert b'"uploads":[{"token":"abc.def"' in body
+
+
+@respx.mock
+async def test_update_issue_422_surfaces_errors(mcp) -> None:
+    respx.put(f"{BASE_URL}/issues/3.json").mock(
+        return_value=httpx.Response(422, json={"errors": ["Subject can't be blank"]})
+    )
+    with pytest.raises(Exception, match="Subject can't be blank"):
+        await call(mcp, "update_issue", id=3, subject="")
+
+
+@respx.mock
+async def test_get_issue_404_surfaces(mcp) -> None:
+    respx.get(f"{BASE_URL}/issues/999.json").mock(return_value=httpx.Response(404))
+    with pytest.raises(Exception, match="not found"):
+        await call(mcp, "get_issue", id=999)
