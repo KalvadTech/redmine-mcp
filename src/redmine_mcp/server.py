@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import os
+
 import httpx
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse
@@ -12,9 +15,43 @@ from .tools import register_all
 
 
 def build_mcp() -> FastMCP:
-    mcp = FastMCP("redmine", stateless_http=True, json_response=True)
+    mcp = FastMCP(
+        "redmine",
+        stateless_http=True,
+        json_response=True,
+        transport_security=_load_transport_security(),
+    )
     register_all(mcp)
     return mcp
+
+
+def _load_transport_security() -> TransportSecuritySettings | None:
+    """Build the DNS-rebinding protection settings from MCP_ALLOWED_HOSTS.
+
+    - empty (default): leave None, FastMCP applies its localhost-only
+      defaults (right for local dev).
+    - comma list of hostnames: enable protection with that allowlist.
+      Each bare entry also matches the same host with any port.
+    - '*': disable DNS-rebinding protection entirely (right when behind
+      a trusted reverse proxy that already enforces hostnames).
+    """
+    raw = os.environ.get("MCP_ALLOWED_HOSTS", "").strip()
+    if not raw:
+        return None
+    if raw == "*":
+        return TransportSecuritySettings(enable_dns_rebinding_protection=False)
+    hosts: list[str] = []
+    for entry in raw.split(","):
+        host = entry.strip()
+        if not host:
+            continue
+        hosts.append(host)
+        if ":" not in host:
+            hosts.append(f"{host}:*")
+    return TransportSecuritySettings(
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=hosts,
+    )
 
 
 async def _up(request: Request) -> PlainTextResponse:

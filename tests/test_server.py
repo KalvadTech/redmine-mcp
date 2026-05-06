@@ -36,3 +36,34 @@ def test_mcp_endpoint_still_requires_key(monkeypatch: Any) -> None:
         )
     assert r.status_code == 400
     assert "X-Redmine-API-Key" in r.json()["error"]["message"]
+
+
+def test_load_transport_security_unset(monkeypatch: Any) -> None:
+    monkeypatch.delenv("MCP_ALLOWED_HOSTS", raising=False)
+    from redmine_mcp.server import _load_transport_security
+
+    assert _load_transport_security() is None
+
+
+def test_load_transport_security_wildcard(monkeypatch: Any) -> None:
+    monkeypatch.setenv("MCP_ALLOWED_HOSTS", "*")
+    from redmine_mcp.server import _load_transport_security
+
+    s = _load_transport_security()
+    assert s is not None and s.enable_dns_rebinding_protection is False
+
+
+def test_load_transport_security_list_expands_port_wildcard(monkeypatch: Any) -> None:
+    monkeypatch.setenv(
+        "MCP_ALLOWED_HOSTS",
+        "redmine-mcp.kalvad.xyz, mcp.example.com:8443",
+    )
+    from redmine_mcp.server import _load_transport_security
+
+    s = _load_transport_security()
+    assert s is not None and s.enable_dns_rebinding_protection is True
+    assert s.allowed_hosts == [
+        "redmine-mcp.kalvad.xyz",
+        "redmine-mcp.kalvad.xyz:*",
+        "mcp.example.com:8443",
+    ]
