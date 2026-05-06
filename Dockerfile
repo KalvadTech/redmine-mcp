@@ -35,6 +35,6 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 USER redmine
-EXPOSE 8765
+EXPOSE 8080
 ENTRYPOINT ["redmine-mcp"]
-CMD ["--host", "0.0.0.0", "--port", "8765"]
+CMD ["--host", "0.0.0.0", "--port", "8080"]

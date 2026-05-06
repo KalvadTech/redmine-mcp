@@ -22,10 +22,10 @@ service key. One server instance proxies one Redmine instance.
 ```sh
 uv sync
 REDMINE_URL=https://redmine.example.com \
-  uv run redmine-mcp --host 127.0.0.1 --port 8765
+  uv run redmine-mcp --host 127.0.0.1 --port 8080
 ```
 
-The MCP endpoint is `http://127.0.0.1:8765/mcp`.
+The MCP endpoint is `http://127.0.0.1:8080/mcp`.
 
 ## Use from Claude Code
 
@@ -36,7 +36,7 @@ The MCP endpoint is `http://127.0.0.1:8765/mcp`.
   "mcpServers": {
     "redmine": {
       "type": "http",
-      "url": "http://127.0.0.1:8765/mcp",
+      "url": "http://127.0.0.1:8080/mcp",
       "headers": {
         "X-Redmine-API-Key": "your-40-char-key"
       }
