@@ -9,7 +9,7 @@ from .tools import register_all
 
 
 def build_mcp() -> FastMCP:
-    mcp = FastMCP("redmine")
+    mcp = FastMCP("redmine", stateless_http=True, json_response=True)
     register_all(mcp)
     return mcp
 

@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from typing import Any
 
+import httpx
 import pytest
+import respx
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, StreamingResponse
 from starlette.routing import Route
 from starlette.testclient import TestClient
 
@@ -80,3 +83,32 @@ def test_load_base_url_strips_trailing_slash(monkeypatch: Any) -> None:
 def test_load_base_url_accepts_http(monkeypatch: Any) -> None:
     monkeypatch.setenv("REDMINE_URL", "http://localhost:3000")
     assert load_base_url() == "http://localhost:3000"
+
+
+@respx.mock
+def test_client_stays_open_during_streaming_response() -> None:
+    """Regression: BaseHTTPMiddleware closed the per-request client before
+    the streaming body finished, breaking FastMCP's SSE responses with
+    'client has been closed'. The pure-ASGI middleware must keep the
+    client alive through the whole response."""
+    respx.get(f"{BASE_URL}/users/current.json").mock(
+        return_value=httpx.Response(200, json={"user": {"id": 99, "login": "ada"}})
+    )
+
+    async def stream_endpoint(request: Request) -> StreamingResponse:
+        async def body() -> AsyncIterator[bytes]:
+            yield b"event: start\n\n"
+            client = get_redmine_client()
+            data = await client.get_json("/users/current.json")
+            yield f"event: result\ndata: {data['user']['login']}\n\n".encode()
+
+        return StreamingResponse(body(), media_type="text/event-stream")
+
+    app = Starlette(routes=[Route("/stream", stream_endpoint)])
+    app.add_middleware(RedmineAuthMiddleware, base_url=BASE_URL)
+
+    with TestClient(app) as tc:
+        r = tc.get("/stream", headers={"X-Redmine-API-Key": GOOD_KEY})
+    assert r.status_code == 200
+    assert b"event: result" in r.content
+    assert b"data: ada" in r.content
