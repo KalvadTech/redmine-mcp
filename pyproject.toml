@@ -1,11 +1,37 @@
 [project]
 name = "redmine-mcp"
 version = "0.1.0"
-description = "Stateless MCP server for Redmine. Each request carries the user's own API key."
+description = "Stateless MCP server for Redmine. Each request carries the user's own API key. No database, no shared secret."
 requires-python = ">=3.14"
 readme = "README.md"
-license = { text = "MIT" }
-authors = [{ name = "Kalvad" }]
+license = { file = "LICENSE" }
+authors = [{ name = "Kalvad", email = "hello@kalvad.com" }]
+keywords = [
+    "mcp",
+    "model-context-protocol",
+    "redmine",
+    "claude",
+    "llm-tools",
+    "issue-tracker",
+    "project-management",
+    "ai",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: POSIX :: BSD :: FreeBSD",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Office/Business :: Groupware",
+    "Topic :: Software Development :: Bug Tracking",
+    "Topic :: Software Development :: Libraries",
+    "Typing :: Typed",
+]
 dependencies = [
     "mcp[cli]==1.27.0",
     "httpx==0.28.1",
@@ -13,6 +39,12 @@ dependencies = [
     "starlette==1.0.0",
     "uvicorn[standard]==0.46.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/KalvadTech/redmine-mcp"
+Repository = "https://github.com/KalvadTech/redmine-mcp"
+Issues = "https://github.com/KalvadTech/redmine-mcp/issues"
+Container = "https://ghcr.io/kalvadtech/redmine-mcp"
 
 [project.scripts]
 redmine-mcp = "redmine_mcp.__main__:main"
