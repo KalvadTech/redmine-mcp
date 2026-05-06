@@ -41,9 +41,15 @@ docker run --rm -p 8080:8080 \
 
 The image is multi-stage Alpine, runs as a non-root user, and exposes 8080.
 
-## Wire it into Claude Code
+## Wire it into your MCP client
 
-`.mcp.json`:
+Find your Redmine API key in `My account > API access key`. Both clients
+below talk to the same MCP endpoint over Streamable HTTP; no other client
+configuration is required.
+
+### Claude Code
+
+`.mcp.json` in your project root:
 
 ```json
 {
@@ -59,7 +65,28 @@ The image is multi-stage Alpine, runs as a non-root user, and exposes 8080.
 }
 ```
 
-Find your API key in Redmine under `My account > API access key`.
+### opencode
+
+`opencode.json` in your project root (or your opencode config directory):
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "redmine": {
+      "type": "remote",
+      "url": "http://127.0.0.1:8080/mcp",
+      "enabled": true,
+      "headers": {
+        "X-Redmine-API-Key": "{env:REDMINE_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+opencode supports `{env:VAR}` interpolation in `headers`, so the API key
+stays out of the config file: `REDMINE_API_KEY=... opencode`.
 
 ## Configuration
 
