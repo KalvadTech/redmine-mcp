@@ -14,7 +14,7 @@ _HEADER_KEY = b"x-redmine-api-key"
 _MIN_KEY_LEN = 16
 _MAX_KEY_LEN = 128
 
-_HEALTH_PATHS = {"/", "/healthz", "/health"}
+_HEALTH_PATHS = {"/up"}
 
 
 class RedmineAuthMiddleware:
