@@ -118,21 +118,48 @@ service account, no impersonation.
 
 ## Tools
 
-All list tools return `{items, total_count, limit, offset}` for easy paging.
+59 tools cover every resource family Redmine exposes through its REST API.
+List tools return `{items, total_count, limit, offset}` for easy paging.
 
 ### Issues
 
-- `list_issues` (project, status, assignee, tracker, category, query, sort, include)
+- `list_issues` (project, status, assignee, tracker, category, version,
+  saved query, free-text query, sort, include)
 - `get_issue` (include: journals, attachments, relations, children, watchers)
 - `create_issue` (incl. `uploads` tokens, `custom_fields`, `watcher_user_ids`)
 - `update_issue` (incl. `notes`, `private_notes`)
 - `add_issue_note` (thin wrapper)
 - `delete_issue`
 
-### Projects, users, memberships
+### Issue relations
 
-- `list_projects`, `get_project`, `list_memberships`
+- `list_issue_relations`, `get_relation`, `create_issue_relation`
+  (relates / blocks / precedes / etc., with `delay` for precedes/follows),
+  `delete_relation`
+
+### Journals (issue notes)
+
+- `update_journal_note` - edit an existing note's text or privacy. Use
+  `add_issue_note` to add a new note.
+
+### Projects and versions
+
+- `list_projects`, `get_project`
+- `list_versions`, `get_version`, `create_version`, `update_version`,
+  `delete_version`
+
+### Memberships
+
+- `list_memberships`, `get_membership`, `add_project_member` (user or
+  group), `update_membership`, `remove_membership`
+
+### Users, my account, groups, roles
+
 - `list_users`, `get_user` (accepts the literal string `"current"`)
+- `get_my_account`, `update_my_account`
+- `list_groups`, `get_group`, `create_group`, `update_group`,
+  `delete_group`, `add_user_to_group`, `remove_user_from_group`
+- `list_roles`, `get_role` (with permissions)
 
 ### Time entries
 
@@ -146,14 +173,18 @@ All list tools return `{items, total_count, limit, offset}` for easy paging.
 - `create_or_update_wiki_page` (PUT-upsert)
 - `delete_wiki_page`
 
-### Attachments
+### Attachments and files
 
 - `get_attachment`, `download_attachment` (capped at 25 MiB, base64 out)
 - `upload_attachment` (returns a token to attach via `uploads` on
   create_issue / update_issue)
+- `list_files`, `upload_file` (one-shot upload + attach to a project's
+  Files area, with optional version_id and description)
 
-### Search and metadata
+### News, queries, search and metadata
 
+- `list_news` (cross-project or per-project)
+- `list_queries` (saved queries; pass the id as `query_id` to `list_issues`)
 - `search` (full-text across issues, news, documents, wiki, etc.)
 - `list_issue_statuses`, `list_trackers`, `list_issue_categories`,
   `list_custom_fields`
