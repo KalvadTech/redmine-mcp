@@ -69,13 +69,21 @@ def register(mcp: FastMCP) -> None:
         priority_id: int | None = None,
         assigned_to_id: int | None = None,
         category_id: int | None = None,
+        version_id: int | None = None,
         parent_issue_id: int | None = None,
+        start_date: str | None = None,
+        due_date: str | None = None,
+        done_ratio: int | None = None,
+        estimated_hours: float | None = None,
+        is_private: bool | None = None,
         watcher_user_ids: list[int] | None = None,
         custom_fields: list[dict[str, Any]] | None = None,
         uploads: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Create an issue.
 
+        start_date / due_date are YYYY-MM-DD. done_ratio is 0..100.
+        version_id sets the target version (Redmine's fixed_version_id).
         custom_fields entries: {"id": int, "value": str | list[str]}.
         uploads entries: {"token": str, "filename": str, "content_type": str,
         "description": str?}. Get a token via upload_attachment first.
@@ -89,7 +97,13 @@ def register(mcp: FastMCP) -> None:
             priority_id=priority_id,
             assigned_to_id=assigned_to_id,
             category_id=category_id,
+            fixed_version_id=version_id,
             parent_issue_id=parent_issue_id,
+            start_date=start_date,
+            due_date=due_date,
+            done_ratio=done_ratio,
+            estimated_hours=estimated_hours,
+            is_private=is_private,
             watcher_user_ids=watcher_user_ids,
             custom_fields=custom_fields,
             uploads=uploads,
@@ -108,13 +122,23 @@ def register(mcp: FastMCP) -> None:
         priority_id: int | None = None,
         assigned_to_id: int | None = None,
         category_id: int | None = None,
+        version_id: int | None = None,
         parent_issue_id: int | None = None,
+        start_date: str | None = None,
+        due_date: str | None = None,
+        done_ratio: int | None = None,
+        estimated_hours: float | None = None,
+        is_private: bool | None = None,
         notes: str | None = None,
         private_notes: bool | None = None,
         custom_fields: list[dict[str, Any]] | None = None,
         uploads: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
-        """Update an issue. Pass notes to add a comment in the same call."""
+        """Update an issue. Pass notes to add a comment in the same call.
+
+        start_date / due_date are YYYY-MM-DD. done_ratio is 0..100.
+        version_id sets the target version (Redmine's fixed_version_id).
+        """
         body = _issue_body(
             project_id=project_id,
             subject=subject,
@@ -124,7 +148,13 @@ def register(mcp: FastMCP) -> None:
             priority_id=priority_id,
             assigned_to_id=assigned_to_id,
             category_id=category_id,
+            fixed_version_id=version_id,
             parent_issue_id=parent_issue_id,
+            start_date=start_date,
+            due_date=due_date,
+            done_ratio=done_ratio,
+            estimated_hours=estimated_hours,
+            is_private=is_private,
             watcher_user_ids=None,
             custom_fields=custom_fields,
             uploads=uploads,

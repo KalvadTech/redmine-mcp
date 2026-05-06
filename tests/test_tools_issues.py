@@ -121,3 +121,47 @@ async def test_get_issue_404_surfaces(mcp) -> None:
     respx.get(f"{BASE_URL}/issues/999.json").mock(return_value=httpx.Response(404))
     with pytest.raises(Exception, match="not found"):
         await call(mcp, "get_issue", id=999)
+
+
+@respx.mock
+async def test_update_issue_dates_progress_estimate(mcp) -> None:
+    route = respx.put(f"{BASE_URL}/issues/3.json").mock(return_value=httpx.Response(204))
+    out = await call(
+        mcp,
+        "update_issue",
+        id=3,
+        start_date="2026-05-01",
+        due_date="2026-05-31",
+        done_ratio=40,
+        estimated_hours=8.5,
+        is_private=True,
+        version_id=12,
+    )
+    assert out == {"id": 3, "updated": True}
+    body = route.calls.last.request.read()
+    assert b'"start_date":"2026-05-01"' in body
+    assert b'"due_date":"2026-05-31"' in body
+    assert b'"done_ratio":40' in body
+    assert b'"estimated_hours":8.5' in body
+    assert b'"is_private":true' in body
+    assert b'"fixed_version_id":12' in body
+
+
+@respx.mock
+async def test_create_issue_with_dates_and_version(mcp) -> None:
+    route = respx.post(f"{BASE_URL}/issues.json").mock(
+        return_value=httpx.Response(201, json={"issue": {"id": 21}})
+    )
+    await call(
+        mcp,
+        "create_issue",
+        project_id="p",
+        subject="schedule",
+        start_date="2026-06-01",
+        due_date="2026-06-15",
+        version_id=7,
+    )
+    body = route.calls.last.request.read()
+    assert b'"start_date":"2026-06-01"' in body
+    assert b'"due_date":"2026-06-15"' in body
+    assert b'"fixed_version_id":7' in body
