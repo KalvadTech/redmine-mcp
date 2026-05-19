@@ -34,9 +34,7 @@ async def test_list_time_entry_activities(mcp) -> None:
 @respx.mock
 async def test_list_document_categories(mcp) -> None:
     respx.get(f"{BASE_URL}/enumerations/document_categories.json").mock(
-        return_value=httpx.Response(
-            200, json={"document_categories": [{"id": 1, "name": "Docs"}]}
-        )
+        return_value=httpx.Response(200, json={"document_categories": [{"id": 1, "name": "Docs"}]})
     )
     out = await call(mcp, "list_document_categories")
     assert out["items"] == [{"id": 1, "name": "Docs"}]

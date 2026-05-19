@@ -76,9 +76,7 @@ def load_base_url() -> str:
         raise RuntimeError("REDMINE_URL env var is required")
     parsed = urlsplit(raw)
     if parsed.scheme not in ("http", "https") or not parsed.netloc:
-        raise RuntimeError(
-            f"REDMINE_URL must be an absolute http(s) URL, got: {raw!r}"
-        )
+        raise RuntimeError(f"REDMINE_URL must be an absolute http(s) URL, got: {raw!r}")
     return f"{parsed.scheme}://{parsed.netloc}{parsed.path.rstrip('/')}"
 
 

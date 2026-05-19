@@ -12,9 +12,7 @@ pytestmark = pytest.mark.usefixtures("bound_client")
 @respx.mock
 async def test_list_wiki_pages(mcp) -> None:
     respx.get(f"{BASE_URL}/projects/p/wiki/index.json").mock(
-        return_value=httpx.Response(
-            200, json={"wiki_pages": [{"title": "Home"}, {"title": "API"}]}
-        )
+        return_value=httpx.Response(200, json={"wiki_pages": [{"title": "Home"}, {"title": "API"}]})
     )
     out = await call(mcp, "list_wiki_pages", project_id="p")
     assert out["items"][0]["title"] == "Home"
@@ -50,8 +48,6 @@ async def test_create_or_update_wiki_page(mcp) -> None:
 
 @respx.mock
 async def test_delete_wiki_page(mcp) -> None:
-    respx.delete(f"{BASE_URL}/projects/p/wiki/Old.json").mock(
-        return_value=httpx.Response(204)
-    )
+    respx.delete(f"{BASE_URL}/projects/p/wiki/Old.json").mock(return_value=httpx.Response(204))
     out = await call(mcp, "delete_wiki_page", project_id="p", title="Old")
     assert out == {"project_id": "p", "title": "Old", "deleted": True}

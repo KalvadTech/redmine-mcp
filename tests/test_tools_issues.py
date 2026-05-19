@@ -61,9 +61,7 @@ async def test_create_issue_strips_none(mcp) -> None:
 
 @respx.mock
 async def test_update_issue_with_notes(mcp) -> None:
-    route = respx.put(f"{BASE_URL}/issues/3.json").mock(
-        return_value=httpx.Response(204)
-    )
+    route = respx.put(f"{BASE_URL}/issues/3.json").mock(return_value=httpx.Response(204))
     out = await call(mcp, "update_issue", id=3, notes="ack")
     assert out == {"id": 3, "updated": True}
     assert b'"notes":"ack"' in route.calls.last.request.read()
@@ -71,9 +69,7 @@ async def test_update_issue_with_notes(mcp) -> None:
 
 @respx.mock
 async def test_add_issue_note_uses_put(mcp) -> None:
-    route = respx.put(f"{BASE_URL}/issues/9.json").mock(
-        return_value=httpx.Response(204)
-    )
+    route = respx.put(f"{BASE_URL}/issues/9.json").mock(return_value=httpx.Response(204))
     out = await call(mcp, "add_issue_note", id=9, notes="hi", private=True)
     assert out["noted"] is True
     body = route.calls.last.request.read()

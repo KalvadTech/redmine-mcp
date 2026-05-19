@@ -14,9 +14,7 @@ pytestmark = pytest.mark.usefixtures("bound_client")
 @respx.mock
 async def test_list_files(mcp) -> None:
     respx.get(f"{BASE_URL}/projects/p/files.json").mock(
-        return_value=httpx.Response(
-            200, json={"files": [{"id": 1, "filename": "spec.pdf"}]}
-        )
+        return_value=httpx.Response(200, json={"files": [{"id": 1, "filename": "spec.pdf"}]})
     )
     out = await call(mcp, "list_files", project_id="p")
     assert out["items"] == [{"id": 1, "filename": "spec.pdf"}]
@@ -24,9 +22,9 @@ async def test_list_files(mcp) -> None:
 
 @respx.mock
 async def test_upload_file_two_step(mcp) -> None:
-    upload_route = respx.post(
-        f"{BASE_URL}/uploads.json", params={"filename": "spec.pdf"}
-    ).mock(return_value=httpx.Response(201, json={"upload": {"token": "tok.123"}}))
+    upload_route = respx.post(f"{BASE_URL}/uploads.json", params={"filename": "spec.pdf"}).mock(
+        return_value=httpx.Response(201, json={"upload": {"token": "tok.123"}})
+    )
     attach_route = respx.post(f"{BASE_URL}/projects/p/files.json").mock(
         return_value=httpx.Response(201, json={"file": {"id": 9}})
     )

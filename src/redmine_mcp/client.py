@@ -221,9 +221,7 @@ def _raise_for_status(resp: httpx.Response) -> None:
     raise RedmineError(status, message, errors=errors, body=body)
 
 
-_current_client: ContextVar[RedmineClient | None] = ContextVar(
-    "redmine_client", default=None
-)
+_current_client: ContextVar[RedmineClient | None] = ContextVar("redmine_client", default=None)
 
 
 def set_current_client(client: RedmineClient | None) -> object:

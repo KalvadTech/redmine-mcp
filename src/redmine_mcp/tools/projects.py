@@ -37,4 +37,3 @@ def register(mcp: FastMCP) -> None:
         params = {"include": csv(include)}
         data = await client().get_json(f"/projects/{id}.json", params=params)
         return data.get("project", data)
-

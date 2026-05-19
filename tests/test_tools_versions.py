@@ -53,9 +53,7 @@ async def test_create_version(mcp) -> None:
 
 @respx.mock
 async def test_update_version(mcp) -> None:
-    route = respx.put(f"{BASE_URL}/versions/5.json").mock(
-        return_value=httpx.Response(204)
-    )
+    route = respx.put(f"{BASE_URL}/versions/5.json").mock(return_value=httpx.Response(204))
     out = await call(mcp, "update_version", id=5, status="closed")
     assert out == {"id": 5, "updated": True}
     body = route.calls.last.request.read()
