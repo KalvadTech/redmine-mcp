@@ -49,9 +49,7 @@ async def test_add_project_member_requires_one_target(mcp) -> None:
 
 @respx.mock
 async def test_update_membership(mcp) -> None:
-    route = respx.put(f"{BASE_URL}/memberships/12.json").mock(
-        return_value=httpx.Response(204)
-    )
+    route = respx.put(f"{BASE_URL}/memberships/12.json").mock(return_value=httpx.Response(204))
     out = await call(mcp, "update_membership", id=12, role_ids=[3, 5])
     assert out == {"id": 12, "updated": True}
     assert b'"role_ids":[3,5]' in route.calls.last.request.read()

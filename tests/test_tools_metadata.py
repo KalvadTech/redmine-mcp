@@ -32,9 +32,7 @@ async def test_list_trackers(mcp) -> None:
 @respx.mock
 async def test_list_issue_categories_for_project(mcp) -> None:
     respx.get(f"{BASE_URL}/projects/p/issue_categories.json").mock(
-        return_value=httpx.Response(
-            200, json={"issue_categories": [{"id": 3, "name": "Backend"}]}
-        )
+        return_value=httpx.Response(200, json={"issue_categories": [{"id": 3, "name": "Backend"}]})
     )
     out = await call(mcp, "list_issue_categories", project_id="p")
     assert out["items"] == [{"id": 3, "name": "Backend"}]

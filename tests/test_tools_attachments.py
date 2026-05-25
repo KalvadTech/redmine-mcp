@@ -98,9 +98,7 @@ async def test_download_attachment_size_cap_exceeded(mcp) -> None:
 @respx.mock
 async def test_download_attachment_missing_content_url(mcp) -> None:
     respx.get(f"{BASE_URL}/attachments/4.json").mock(
-        return_value=httpx.Response(
-            200, json={"attachment": {"id": 4, "filename": "x.txt"}}
-        )
+        return_value=httpx.Response(200, json={"attachment": {"id": 4, "filename": "x.txt"}})
     )
     with pytest.raises(Exception, match="content_url"):
         await call(mcp, "download_attachment", id=4)

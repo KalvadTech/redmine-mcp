@@ -12,9 +12,7 @@ pytestmark = pytest.mark.usefixtures("bound_client")
 @respx.mock
 async def test_list_groups(mcp) -> None:
     respx.get(f"{BASE_URL}/groups.json").mock(
-        return_value=httpx.Response(
-            200, json={"groups": [{"id": 1, "name": "Backend"}]}
-        )
+        return_value=httpx.Response(200, json={"groups": [{"id": 1, "name": "Backend"}]})
     )
     out = await call(mcp, "list_groups")
     assert out["items"] == [{"id": 1, "name": "Backend"}]
@@ -62,9 +60,7 @@ async def test_delete_group(mcp) -> None:
 
 @respx.mock
 async def test_add_user_to_group(mcp) -> None:
-    route = respx.post(f"{BASE_URL}/groups/1/users.json").mock(
-        return_value=httpx.Response(204)
-    )
+    route = respx.post(f"{BASE_URL}/groups/1/users.json").mock(return_value=httpx.Response(204))
     out = await call(mcp, "add_user_to_group", group_id=1, user_id=42)
     assert out == {"group_id": 1, "user_id": 42, "added": True}
     assert b'"user_id":42' in route.calls.last.request.read()

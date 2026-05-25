@@ -97,9 +97,7 @@ async def test_list_time_entries_only_to(mcp) -> None:
 
 @respx.mock
 async def test_update_time_entry(mcp) -> None:
-    route = respx.put(f"{BASE_URL}/time_entries/8.json").mock(
-        return_value=httpx.Response(204)
-    )
+    route = respx.put(f"{BASE_URL}/time_entries/8.json").mock(return_value=httpx.Response(204))
     out = await call(mcp, "update_time_entry", id=8, hours=3.0, comments="rev")
     assert out == {"id": 8, "updated": True}
     body = route.calls.last.request.read()
