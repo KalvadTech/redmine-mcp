@@ -1,7 +1,7 @@
 FROM python:3.14-alpine
 
 RUN apk add --no-cache build-base libffi-dev openssl-dev rust cargo curl wget \
-    && pip install --no-cache-dir uv==0.11.15 \
+    && pip install --no-cache-dir uv==0.11.17 \
     && addgroup -S redmine \
     && adduser -S -G redmine -u 10001 redmine
 
