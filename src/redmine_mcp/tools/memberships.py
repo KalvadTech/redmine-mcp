@@ -39,10 +39,11 @@ def register(mcp: FastMCP) -> None:
         Provide exactly one of user_id or group_id."""
         if (user_id is None) == (group_id is None):
             raise ValueError("provide exactly one of user_id or group_id")
-        body: dict[str, Any] = {
-            "user_id": user_id if user_id is not None else group_id,
-            "role_ids": role_ids,
-        }
+        body: dict[str, Any] = {"role_ids": role_ids}
+        if user_id is not None:
+            body["user_id"] = user_id
+        else:
+            body["group_id"] = group_id
         data = await client().post_json(
             f"/projects/{project_id}/memberships.json",
             json={"membership": body},

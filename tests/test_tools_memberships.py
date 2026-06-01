@@ -37,7 +37,7 @@ async def test_add_project_member_group(mcp) -> None:
     )
     await call(mcp, "add_project_member", project_id="p", group_id=99, role_ids=[3, 4])
     body = route.calls.last.request.read()
-    assert b'"user_id":99' in body
+    assert b'"group_id":99' in body
     assert b'"role_ids":[3,4]' in body
 
 
