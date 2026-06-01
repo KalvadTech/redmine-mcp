@@ -1,6 +1,6 @@
 [project]
 name = "redmine-mcp"
-version = "0.2.4"
+version = "0.2.5"
 description = "Stateless MCP server for Redmine. Each request carries the user's own API key. No database, no shared secret."
 requires-python = ">=3.14"
 readme = "README.md"
