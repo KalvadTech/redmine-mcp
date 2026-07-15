@@ -11,10 +11,11 @@ from starlette.responses import PlainTextResponse
 from starlette.routing import Route
 
 from .middleware import RedmineAuthMiddleware, load_base_url
+from .resources import register as register_resources
 from .tools import register_all
 
 
-def build_mcp() -> FastMCP:
+def build_mcp(base_url: str) -> FastMCP:
     mcp = FastMCP(
         "redmine",
         stateless_http=True,
@@ -22,6 +23,7 @@ def build_mcp() -> FastMCP:
         transport_security=_load_transport_security(),
     )
     register_all(mcp)
+    register_resources(mcp, base_url)
     return mcp
 
 
@@ -68,7 +70,7 @@ def build_app(transport: httpx.AsyncBaseTransport | None = None) -> Starlette:
     its default.
     """
     base_url = load_base_url()
-    mcp = build_mcp()
+    mcp = build_mcp(base_url)
     app: Starlette = mcp.streamable_http_app()
     app.routes.append(Route("/up", _up, methods=["GET"]))
     app.add_middleware(RedmineAuthMiddleware, base_url=base_url, transport=transport)

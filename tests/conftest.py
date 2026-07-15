@@ -13,6 +13,7 @@ from redmine_mcp.client import (
     reset_current_client,
     set_current_client,
 )
+from redmine_mcp.resources import register as register_resources
 from redmine_mcp.tools import register_all
 
 BASE_URL = "https://redmine.test"
@@ -23,6 +24,7 @@ API_KEY = "1234567890abcdef1234567890abcdef12345678"
 def mcp() -> FastMCP:
     server = FastMCP("redmine-test")
     register_all(server)
+    register_resources(server, BASE_URL)
     return server
 
 
