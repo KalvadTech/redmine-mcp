@@ -7,7 +7,7 @@ Streamable HTTP (Starlette/uvicorn). Python, single package, stateless.
 
 ```
 src/redmine_mcp/
-├── __init__.py          # __version__ = "0.2.6"
+├── __init__.py          # __version__ = "0.3.0"
 ├── __main__.py          # CLI entry point — argparse + uvicorn.run()
 ├── server.py            # Composition root: build_app(), build_mcp()
 ├── client.py            # RedmineClient — async httpx wrapper for Redmine API
