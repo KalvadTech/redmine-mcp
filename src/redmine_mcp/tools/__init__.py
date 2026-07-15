@@ -17,6 +17,7 @@ from . import (
     roles,
     search,
     time_entries,
+    urls,
     users,
     versions,
     wiki,
@@ -43,3 +44,4 @@ def register_all(mcp: FastMCP) -> None:
     wiki.register(mcp)
     attachments.register(mcp)
     files.register(mcp)
+    urls.register(mcp)

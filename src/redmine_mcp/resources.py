@@ -25,7 +25,7 @@ def register(mcp: FastMCP, base_url: str) -> None:
     async def redmine_issue(id: str) -> str:
         client = get_redmine_client()
         data = await client.get_json(f"/issues/{id}.json")
-        return _format_issue(data.get("issue", data))
+        return format_issue(data.get("issue", data))
 
     @mcp.resource(
         f"{base}/projects/{{identifier}}",
@@ -37,10 +37,10 @@ def register(mcp: FastMCP, base_url: str) -> None:
     async def redmine_project(identifier: str) -> str:
         client = get_redmine_client()
         data = await client.get_json(f"/projects/{identifier}.json")
-        return _format_project(data.get("project", data))
+        return format_project(data.get("project", data))
 
 
-def _format_issue(issue: dict[str, Any]) -> str:
+def format_issue(issue: dict[str, Any]) -> str:
     lines: list[str] = [
         f"# Issue #{issue.get('id')}: {issue.get('subject', '')}",
         "",
@@ -72,7 +72,7 @@ def _format_issue(issue: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def _format_project(project: dict[str, Any]) -> str:
+def format_project(project: dict[str, Any]) -> str:
     lines: list[str] = [
         f"# Project: {project.get('name', '')}",
         "",
