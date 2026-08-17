@@ -1,4 +1,4 @@
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from . import (
     attachments,
@@ -24,7 +24,7 @@ from . import (
 )
 
 
-def register_all(mcp: FastMCP) -> None:
+def register_all(mcp: MCPServer) -> None:
     metadata.register(mcp)
     enumerations.register(mcp)
     projects.register(mcp)

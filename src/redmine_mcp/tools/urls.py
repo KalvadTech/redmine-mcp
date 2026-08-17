@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from urllib.parse import urlsplit
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from ..client import get_redmine_client
 from ..resources import format_issue, format_project
@@ -12,7 +12,7 @@ _IssuePattern = re.compile(r"^/issues/(\d+)$")
 _ProjectPattern = re.compile(r"^/projects/([^/]+)$")
 
 
-def register(mcp: FastMCP) -> None:
+def register(mcp: MCPServer) -> None:
     @mcp.tool()
     async def open_redmine_url(url: str) -> str:
         """Open a Redmine URL and return the entity as Markdown.

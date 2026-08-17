@@ -3,12 +3,12 @@ from __future__ import annotations
 import base64
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from ._common import client
 
 
-def register(mcp: FastMCP) -> None:
+def register(mcp: MCPServer) -> None:
     @mcp.tool()
     async def list_files(project_id: int | str) -> dict[str, Any]:
         """List files attached to a project."""

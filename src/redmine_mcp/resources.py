@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from .client import get_redmine_client
 
 
-def register(mcp: FastMCP, base_url: str) -> None:
+def register(mcp: MCPServer, base_url: str) -> None:
     """Register Redmine URL resource templates for the configured base URL.
 
     When a user pastes a Redmine URL matching ``base_url``, the MCP client

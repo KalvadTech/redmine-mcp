@@ -65,9 +65,9 @@ __main__.py: main()
        └─ server.py: build_app()
             ├─ load_base_url()          # REDMINE_URL env → validated once
             ├─ build_mcp()
-            │    ├─ FastMCP("redmine", stateless_http=True, json_response=True)
+            │    ├─ MCPServer("redmine")
             │    └─ register_all(mcp)   # 19 tool modules, @mcp.tool() decorators
-            └─ mcp.streamable_http_app()
+            └─ mcp.streamable_http_app(stateless_http=True, json_response=True, ...)
                  ├─ Route("/up", _up)   # health check
                  └─ RedmineAuthMiddleware
 
@@ -77,7 +77,7 @@ HTTP Request (JSON-RPC)
        ├─ extract X-Redmine-API-Key → validate
        ├─ invalid → send JSON-RPC error (-32600, 400) → short-circuit
        ├─ valid → RedmineClient(base_url, key) → ContextVar
-       └─ inner app (FastMCP streamable HTTP)
+       └─ inner app (MCPServer streamable HTTP)
             └─ JSON-RPC dispatch → @mcp.tool() handler
                  └─ client().get_json("/issues/42.json")
                       └─ httpx → Redmine REST API
@@ -92,14 +92,14 @@ HTTP Request (JSON-RPC)
 1. **Ingress**: MCP client sends JSON-RPC over HTTP POST.
 2. **Auth extraction**: Middleware reads `X-Redmine-API-Key` header, creates
    per-request `RedmineClient`.
-3. **Tool dispatch**: FastMCP routes `tools/call` to the registered async function.
+3. **Tool dispatch**: MCPServer routes `tools/call` to the registered async function.
 4. **API call**: Tool calls `client().get_json()` etc. → `httpx.Response.json()`
    → raw `dict`.
 5. **Envelope unwrapping**: Tools manually extract the resource key (e.g.
    `data.get("issue", data)` for single resources, `paginate()` for lists).
 6. **Pagination normalization**: `paginate()` returns uniform `{items, total_count,
    limit, offset}` regardless of resource type.
-7. **Return**: Tool returns `dict[str, Any]` → FastMCP serializes to JSON-RPC
+7. **Return**: Tool returns `dict[str, Any]` → MCPServer serializes to JSON-RPC
    response → Starlette sends HTTP response.
 8. **Binary**: Uploads decode base64 → bytes → `application/octet-stream`.
    Downloads stream bytes → base64 string (capped at 25 MiB).
@@ -113,7 +113,7 @@ horizontally scalable — any instance can handle any request.
 
 ### Pure-ASGI middleware (not BaseHTTPMiddleware)
 `Starlette`'s `BaseHTTPMiddleware` closes the client in `finally` before
-streaming SSE responses finish, which breaks FastMCP's Streamable HTTP.
+streaming SSE responses finish, which breaks MCPServer's Streamable HTTP.
 The pure-ASGI approach (`middleware.py:20`) ensures the client stays alive
 through the entire response lifecycle.
 
@@ -121,10 +121,10 @@ through the entire response lifecycle.
 A `ContextVar[RedmineClient | None]` acts as a service locator. Tools call
 `client()` (via `_common.py`) to get the request-scoped API client. Avoids
 threading the client through every function signature — critical because
-FastMCP tool signatures are introspected for LLM schema generation.
+MCPServer tool signatures are introspected for LLM schema generation.
 
 ### Modular tool registration
-Each tool module exports `register(mcp: FastMCP) -> None`. `register_all()`
+Each tool module exports `register(mcp: MCPServer) -> None`. `register_all()`
 in `tools/__init__.py` calls each in deterministic order. Tools are
 self-contained — adding a new resource means adding one file.
 
@@ -142,16 +142,16 @@ for uvicorn binding (`--host`, `--port`, `--log-level`).
 - `respx` mocks httpx at the transport layer — all tests are offline.
 - `build_app(transport=...)` allows injecting mock transport for integration tests.
 - `conftest.py` provides `call()` helper that invokes MCP tools via
-  `FastMCP.call_tool()` and unwraps `TextContent` → JSON.
+  `MCPServer.call_tool()` and unwraps `TextContent` → JSON.
 
 ## Dependencies
 
 | Package | Usage |
 |---------|-------|
-| `mcp[cli]==1.28.1` | FastMCP server, `@mcp.tool()` decorator, JSON-RPC dispatch, `TransportSecuritySettings` |
+| `mcp[cli]==2.0.0` | MCPServer, `@mcp.tool()` decorator, JSON-RPC dispatch, `TransportSecuritySettings` |
 | `httpx==0.28.1` | Async HTTP client for Redmine API. `RedmineClient` owns one `AsyncClient` per request |
-| `starlette==1.3.1` | ASGI app, routing (`/up` health check), `PlainTextResponse` |
-| `uvicorn[standard]==0.49.0` | ASGI server, launched from `__main__.py` |
+| `starlette==1.6.0` | ASGI app, routing (`/up` health check), `PlainTextResponse` |
+| `uvicorn[standard]==0.52.3` | ASGI server, launched from `__main__.py` |
 | `pydantic==2.13.4` | Transitive dependency of `mcp` (not used directly) |
 | `pytest`, `pytest-asyncio`, `respx` | Test framework + HTTP mocking |
 | `ruff`, `mypy` | Linting + strict type checking |
@@ -162,7 +162,7 @@ for uvicorn binding (`--host`, `--port`, `--log-level`).
   the configured host/port.
 - **`build_app()`** (`server.py:60`) — composition root. Used by both
   `__main__.py` and tests (with `transport=` injection).
-- **`build_mcp()`** (`server.py:16`) — creates `FastMCP` instance with tools
+- **`build_mcp()`** (`server.py:16`) — creates `MCPServer` instance with tools
   registered. Used by tests that need the MCP server without the HTTP layer.
 - **Tests** — `pytest` with `asyncio_mode = "auto"`. Each test file uses
   `respx` to mock Redmine API responses.

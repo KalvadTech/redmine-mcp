@@ -3,8 +3,9 @@ from __future__ import annotations
 import httpx
 import pytest
 import respx
-from mcp.server.fastmcp import FastMCP
 from mcp.server.lowlevel.helper_types import ReadResourceContents
+from mcp.server.mcpserver import MCPServer
+from mcp.server.mcpserver.exceptions import ResourceError
 
 from redmine_mcp.client import RedmineClient
 
@@ -13,15 +14,15 @@ KEY = "x" * 40
 
 
 @respx.mock
-async def test_resource_templates_listed(mcp: FastMCP) -> None:
+async def test_resource_templates_listed(mcp: MCPServer) -> None:
     templates = await mcp.list_resource_templates()
-    uris = {t.uriTemplate for t in templates}
+    uris = {t.uri_template for t in templates}
     assert f"{BASE}/issues/{{id}}" in uris
     assert f"{BASE}/projects/{{identifier}}" in uris
 
 
 @respx.mock
-async def test_read_issue_resource(mcp: FastMCP, bound_client: RedmineClient) -> None:
+async def test_read_issue_resource(mcp: MCPServer, bound_client: RedmineClient) -> None:
     respx.get(f"{BASE}/issues/4085.json").mock(
         return_value=httpx.Response(
             200,
@@ -58,7 +59,7 @@ async def test_read_issue_resource(mcp: FastMCP, bound_client: RedmineClient) ->
 
 
 @respx.mock
-async def test_read_project_resource(mcp: FastMCP, bound_client: RedmineClient) -> None:
+async def test_read_project_resource(mcp: MCPServer, bound_client: RedmineClient) -> None:
     respx.get(f"{BASE}/projects/website.json").mock(
         return_value=httpx.Response(
             200,
@@ -89,8 +90,8 @@ async def test_read_project_resource(mcp: FastMCP, bound_client: RedmineClient) 
 
 
 @respx.mock
-async def test_read_issue_resource_not_found(mcp: FastMCP, bound_client: RedmineClient) -> None:
+async def test_read_issue_resource_not_found(mcp: MCPServer, bound_client: RedmineClient) -> None:
     respx.get(f"{BASE}/issues/999.json").mock(return_value=httpx.Response(404))
 
-    with pytest.raises(ValueError):  # raised by FastMCP template creation
+    with pytest.raises(ResourceError):  # raised by MCPServer template creation
         await mcp.read_resource(f"{BASE}/issues/999")

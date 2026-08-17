@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import Any
 from urllib.parse import quote
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from ._common import client
 
 
-def register(mcp: FastMCP) -> None:
+def register(mcp: MCPServer) -> None:
     @mcp.tool()
     async def list_wiki_pages(project_id: int | str) -> dict[str, Any]:
         """List wiki pages in a project. Returns the full index in one call;

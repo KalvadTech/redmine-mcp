@@ -3,7 +3,7 @@ from __future__ import annotations
 import base64
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from ._common import client
 
@@ -11,7 +11,7 @@ _DEFAULT_MAX_DOWNLOAD_BYTES = 10 * 1024 * 1024
 _HARD_MAX_DOWNLOAD_BYTES = 25 * 1024 * 1024
 
 
-def register(mcp: FastMCP) -> None:
+def register(mcp: MCPServer) -> None:
     @mcp.tool()
     async def get_attachment(id: int) -> dict[str, Any]:
         """Get attachment metadata (filename, size, content_url, ...)."""

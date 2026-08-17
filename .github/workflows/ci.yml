@@ -16,7 +16,7 @@ permissions:
   packages: write
 
 env:
-  UV_VERSION: "0.11.17"
+  UV_VERSION: "0.12.5"
   PYTHON_VERSION: "3.14"
 
 jobs:
