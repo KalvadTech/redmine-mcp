@@ -32,17 +32,19 @@ def _build(base_url: str = BASE_URL) -> Starlette:
     return app
 
 
-def test_missing_key_header_400() -> None:
+def test_missing_credentials_401() -> None:
     with TestClient(_build()) as tc:
         r = tc.get("/probe")
-    assert r.status_code == 400
-    assert "X-Redmine-API-Key" in r.json()["error"]["message"]
+    assert r.status_code == 401
+    assert r.headers["www-authenticate"] == "Bearer"
+    assert "Bearer" in r.json()["error"]["message"]
 
 
 def test_short_key_rejected() -> None:
     with TestClient(_build()) as tc:
         r = tc.get("/probe", headers={"X-Redmine-API-Key": "short"})
-    assert r.status_code == 400
+    assert r.status_code == 401
+    assert r.headers["www-authenticate"] == "Bearer"
     assert "length" in r.json()["error"]["message"]
 
 
@@ -52,8 +54,71 @@ def test_whitespace_in_key_rejected() -> None:
             "/probe",
             headers={"X-Redmine-API-Key": "x" * 10 + " " + "y" * 10},
         )
-    assert r.status_code == 400
+    assert r.status_code == 401
     assert "whitespace" in r.json()["error"]["message"]
+
+
+def test_bearer_happy_path() -> None:
+    with TestClient(_build()) as tc:
+        r = tc.get("/probe", headers={"Authorization": f"Bearer {GOOD_KEY}"})
+    assert r.status_code == 200
+    assert r.json()["base_url"] == BASE_URL
+
+
+def test_bearer_scheme_is_case_insensitive() -> None:
+    with TestClient(_build()) as tc:
+        r = tc.get("/probe", headers={"Authorization": f"bearer {GOOD_KEY}"})
+    assert r.status_code == 200
+
+
+def test_bearer_missing_token_401() -> None:
+    with TestClient(_build()) as tc:
+        r = tc.get("/probe", headers={"Authorization": "Bearer"})
+    assert r.status_code == 401
+    assert r.headers["www-authenticate"] == "Bearer"
+
+
+def test_wrong_scheme_401() -> None:
+    with TestClient(_build()) as tc:
+        r = tc.get("/probe", headers={"Authorization": f"Basic {GOOD_KEY}"})
+    assert r.status_code == 401
+    assert "Bearer" in r.json()["error"]["message"]
+
+
+def test_bearer_short_key_rejected() -> None:
+    with TestClient(_build()) as tc:
+        r = tc.get("/probe", headers={"Authorization": "Bearer short"})
+    assert r.status_code == 401
+    assert "length" in r.json()["error"]["message"]
+
+
+@respx.mock
+def test_bearer_wins_over_legacy_header() -> None:
+    """When both headers are present, the Bearer token is the one forwarded
+    to Redmine as X-Redmine-API-Key."""
+    other_key = "b" * 40
+    route = respx.get(f"{BASE_URL}/users/current.json").mock(
+        return_value=httpx.Response(200, json={"user": {"id": 1}})
+    )
+
+    async def probe(request: Request) -> JSONResponse:
+        client = get_redmine_client()
+        await client.get_json("/users/current.json")
+        return JSONResponse({"ok": True})
+
+    app = Starlette(routes=[Route("/probe", probe)])
+    app.add_middleware(RedmineAuthMiddleware, base_url=BASE_URL)
+
+    with TestClient(app) as tc:
+        r = tc.get(
+            "/probe",
+            headers={
+                "Authorization": f"Bearer {GOOD_KEY}",
+                "X-Redmine-API-Key": other_key,
+            },
+        )
+    assert r.status_code == 200
+    assert route.calls[0].request.headers["x-redmine-api-key"] == GOOD_KEY
 
 
 def test_happy_path_binds_client_to_configured_url() -> None:
@@ -108,11 +173,11 @@ def test_lifespan_passes_through() -> None:
 def test_concurrent_requests_get_separate_clients() -> None:
     """Each request must bind its own RedmineClient instance to the
     ContextVar; one request must not see another's client."""
-    seen: list[int] = []
+    seen: list[Any] = []
 
     async def probe(request: Request) -> JSONResponse:
         c = get_redmine_client()
-        seen.append(id(c))
+        seen.append(c)  # keep alive: a freed client's id() can be reused
         return JSONResponse({"id": id(c)})
 
     app = Starlette(routes=[Route("/probe", probe)])
@@ -122,13 +187,13 @@ def test_concurrent_requests_get_separate_clients() -> None:
         a = tc.get("/probe", headers={"X-Redmine-API-Key": GOOD_KEY}).json()["id"]
         b = tc.get("/probe", headers={"X-Redmine-API-Key": GOOD_KEY}).json()["id"]
     assert a != b
-    assert len(seen) == 2 and seen[0] != seen[1]
+    assert len(seen) == 2 and seen[0] is not seen[1]
 
 
 @respx.mock
 def test_client_stays_open_during_streaming_response() -> None:
     """Regression: BaseHTTPMiddleware closed the per-request client before
-    the streaming body finished, breaking FastMCP's SSE responses with
+    the streaming body finished, breaking the SSE responses with
     'client has been closed'. The pure-ASGI middleware must keep the
     client alive through the whole response."""
     respx.get(f"{BASE_URL}/users/current.json").mock(

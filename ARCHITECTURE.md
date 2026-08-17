@@ -47,7 +47,7 @@ tests/                   # pytest + respx (HTTP mocking), 24 files
 - **`RedmineError`** (`errors.py:6`) — raised on non-2xx Redmine responses.
   Fields: `status`, `message`, `errors: list[str]`, `body`.
 - **`AuthHeaderError`** (`errors.py:28`) — raised on missing/invalid
-  `X-Redmine-API-Key` header. Status 400.
+  credentials (`Authorization: Bearer` or `X-Redmine-API-Key`). Status 401.
 - **`RedmineAuthMiddleware`** (`middleware.py:20`) — pure-ASGI middleware.
   Extracts API key → validates → creates `RedmineClient` → binds to
   `ContextVar` → awaits inner app → closes client in `finally`.
@@ -74,8 +74,8 @@ __main__.py: main()
 HTTP Request (JSON-RPC)
   → RedmineAuthMiddleware.__call__()
        ├─ skip non-HTTP / health paths
-       ├─ extract X-Redmine-API-Key → validate
-       ├─ invalid → send JSON-RPC error (-32600, 400) → short-circuit
+       ├─ extract Bearer token (or X-Redmine-API-Key fallback) → validate
+       ├─ invalid → send JSON-RPC error (-32600, 401 + WWW-Authenticate) → short-circuit
        ├─ valid → RedmineClient(base_url, key) → ContextVar
        └─ inner app (MCPServer streamable HTTP)
             └─ JSON-RPC dispatch → @mcp.tool() handler
@@ -90,7 +90,8 @@ HTTP Request (JSON-RPC)
 ## Data flow
 
 1. **Ingress**: MCP client sends JSON-RPC over HTTP POST.
-2. **Auth extraction**: Middleware reads `X-Redmine-API-Key` header, creates
+2. **Auth extraction**: Middleware reads `Authorization: Bearer <key>`
+   (preferred) or the legacy `X-Redmine-API-Key` header, creates
    per-request `RedmineClient`.
 3. **Tool dispatch**: MCPServer routes `tools/call` to the registered async function.
 4. **API call**: Tool calls `client().get_json()` etc. → `httpx.Response.json()`

@@ -14,8 +14,8 @@ each user's own API key.
 - **Zero state**: no database, no sessions, no shared secret. The server
   forwards each request to Redmine using the API key that came in with it.
 - **One server, many users**: the only thing the operator configures is the
-  upstream `REDMINE_URL`. Each MCP client supplies its own
-  `X-Redmine-API-Key`. Permissions are whatever Redmine says they are.
+  upstream `REDMINE_URL`. Each MCP client supplies its own Redmine API key
+  as a Bearer token. Permissions are whatever Redmine says they are.
 - **Coverage**: issues (CRUD + notes), projects, memberships, users, time
   entries, wiki (PUT-upsert), attachments (upload + download), full-text
   search, statuses, trackers, categories, custom fields, enumerations.
@@ -43,9 +43,9 @@ The image is multi-stage Alpine, runs as a non-root user, and exposes 8080.
 
 ## Wire it into your MCP client
 
-Find your Redmine API key in `My account > API access key`. Both clients
-below talk to the same MCP endpoint over Streamable HTTP; no other client
-configuration is required.
+Find your Redmine API key in `My account > API access key`. The key goes in
+the standard `Authorization: Bearer` header; both clients below talk to the
+same MCP endpoint over Streamable HTTP.
 
 ### Claude Code
 
@@ -58,7 +58,7 @@ configuration is required.
       "type": "http",
       "url": "http://127.0.0.1:8080/mcp",
       "headers": {
-        "X-Redmine-API-Key": "your-40-char-key"
+        "Authorization": "Bearer your-40-char-key"
       }
     }
   }
@@ -78,7 +78,7 @@ configuration is required.
       "url": "http://127.0.0.1:8080/mcp",
       "enabled": true,
       "headers": {
-        "X-Redmine-API-Key": "{env:REDMINE_API_KEY}"
+        "Authorization": "Bearer {env:REDMINE_API_KEY}"
       }
     }
   }
@@ -87,6 +87,9 @@ configuration is required.
 
 opencode supports `{env:VAR}` interpolation in `headers`, so the API key
 stays out of the config file: `REDMINE_API_KEY=... opencode`.
+
+The legacy `X-Redmine-API-Key` header is still accepted. If both headers
+are sent, the Bearer token wins.
 
 ## Configuration
 
@@ -111,11 +114,16 @@ The Redmine URL is **not** user-supplied; it is fixed per deployment via
 `REDMINE_URL`. This eliminates SSRF risk: clients cannot point the server at
 arbitrary hosts.
 
-The only credential a client sends is its own Redmine API key in the
-`X-Redmine-API-Key` header. The server forwards it as the same header to
-Redmine (so it does not land in Redmine access logs as a query string), uses
-it to make one request, then discards it. There is no caching, no shared
-service account, no impersonation.
+The only credential a client sends is its own Redmine API key, normally in
+the `Authorization: Bearer <key>` header (the legacy `X-Redmine-API-Key`
+header is accepted as a fallback). The server forwards it to Redmine as
+`X-Redmine-API-Key` (so it does not land in Redmine access logs as a query
+string), uses it to make one request, then discards it. There is no
+caching, no shared service account, no impersonation.
+
+Requests without valid credentials get a `401` with a
+`WWW-Authenticate: Bearer` header and a JSON-RPC error body, so strict
+MCP clients can surface the auth requirement properly.
 
 ## Tools
 

@@ -34,8 +34,9 @@ def test_mcp_endpoint_still_requires_key(monkeypatch: Any) -> None:
             json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
             headers={"Accept": "application/json, text/event-stream"},
         )
-    assert r.status_code == 400
-    assert "X-Redmine-API-Key" in r.json()["error"]["message"]
+    assert r.status_code == 401
+    assert r.headers["www-authenticate"] == "Bearer"
+    assert "Bearer" in r.json()["error"]["message"]
 
 
 def test_load_transport_security_unset(monkeypatch: Any) -> None:

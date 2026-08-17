@@ -26,9 +26,10 @@ class RedmineError(Exception):
 
 
 class AuthHeaderError(Exception):
-    """Raised when X-Redmine-URL / X-Redmine-API-Key headers are missing or invalid."""
+    """Raised when the request credentials (Authorization: Bearer or the
+    legacy X-Redmine-API-Key header) are missing or invalid."""
 
-    def __init__(self, message: str, status: int = 400) -> None:
+    def __init__(self, message: str, status: int = 401) -> None:
         super().__init__(message)
         self.message = message
         self.status = status

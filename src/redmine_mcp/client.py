@@ -237,6 +237,6 @@ def get_redmine_client() -> RedmineClient:
     if client is None:
         raise RuntimeError(
             "no RedmineClient bound to this request; "
-            "X-Redmine-URL and X-Redmine-API-Key must be set"
+            "Authorization: Bearer or X-Redmine-API-Key must be set"
         )
     return client
