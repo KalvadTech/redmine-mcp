@@ -15,7 +15,7 @@ _HEADER_KEY = b"x-redmine-api-key"
 _MIN_KEY_LEN = 16
 _MAX_KEY_LEN = 128
 
-_HEALTH_PATHS = {"/up"}
+_PUBLIC_PATHS = {"/up", "/.well-known/mcp/server-card/mcp", "/favicon.ico", "/favicon.png"}
 
 
 class RedmineAuthMiddleware:
@@ -45,7 +45,7 @@ class RedmineAuthMiddleware:
         if scope.get("type") != "http":
             await self._app(scope, receive, send)
             return
-        if scope.get("path") in _HEALTH_PATHS:
+        if scope.get("path") in _PUBLIC_PATHS:
             await self._app(scope, receive, send)
             return
 

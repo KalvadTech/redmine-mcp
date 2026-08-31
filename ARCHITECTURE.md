@@ -7,11 +7,13 @@ Streamable HTTP (Starlette/uvicorn). Python, single package, stateless.
 
 ```
 src/redmine_mcp/
-├── __init__.py          # __version__ = "0.3.0"
+├── __init__.py          # __version__ = "0.5.0"
 ├── __main__.py          # CLI entry point — argparse + uvicorn.run()
 ├── server.py            # Composition root: build_app(), build_mcp()
 ├── client.py            # RedmineClient — async httpx wrapper for Redmine API
 ├── middleware.py         # RedmineAuthMiddleware — pure-ASGI, per-request auth
+├── discovery.py         # Server Card + favicons (public), McpEraCompatMiddleware
+├── static/              # favicon.png, favicon.ico
 ├── errors.py            # RedmineError, AuthHeaderError
 ├── tools/
 │   ├── __init__.py      # register_all() — calls each module's register()
@@ -35,7 +37,7 @@ src/redmine_mcp/
 │   ├── metadata.py      # list statuses/trackers/categories/custom fields
 │   ├── journals.py      # update journal notes
 │   └── my_account.py    # get/update current user
-tests/                   # pytest + respx (HTTP mocking), 24 files
+tests/                   # pytest + respx (HTTP mocking), 27 files
 ```
 
 ## Key types and relationships
@@ -69,20 +71,27 @@ __main__.py: main()
             │    └─ register_all(mcp)   # 19 tool modules, @mcp.tool() decorators
             └─ mcp.streamable_http_app(stateless_http=True, json_response=True, ...)
                  ├─ Route("/up", _up)   # health check
-                 └─ RedmineAuthMiddleware
+                 ├─ Route("/.well-known/mcp/server-card/mcp", server_card)  # public
+                 ├─ Route("/favicon.ico" | "/favicon.png", ...)            # public
+                 ├─ McpEraCompatMiddleware    # header normalization (inner)
+                 └─ RedmineAuthMiddleware     # per-request auth (outermost)
 
 HTTP Request (JSON-RPC)
   → RedmineAuthMiddleware.__call__()
-       ├─ skip non-HTTP / health paths
+       ├─ skip non-HTTP / public paths
        ├─ extract Bearer token (or X-Redmine-API-Key fallback) → validate
        ├─ invalid → send JSON-RPC error (-32600, 401 + WWW-Authenticate) → short-circuit
        ├─ valid → RedmineClient(base_url, key) → ContextVar
-       └─ inner app (MCPServer streamable HTTP)
-            └─ JSON-RPC dispatch → @mcp.tool() handler
-                 └─ client().get_json("/issues/42.json")
-                      └─ httpx → Redmine REST API
-                 → return dict
-            ← JSON-RPC response
+       └─ McpEraCompatMiddleware.__call__()
+            ├─ POST /mcp: buffer body, normalize era-routing headers, replay body
+            │    (initialize → legacy routing; modern requests get mirrored
+            │     Mcp-Method/Mcp-Name headers injected when missing)
+            └─ inner app (MCPServer streamable HTTP)
+                 └─ JSON-RPC dispatch → @mcp.tool() handler
+                      └─ client().get_json("/issues/42.json")
+                           └─ httpx → Redmine REST API
+                      → return dict
+                 ← JSON-RPC response
   ← HTTP response (JSON)
   ← finally: reset ContextVar, close httpx client
 ```
@@ -117,6 +126,25 @@ horizontally scalable — any instance can handle any request.
 streaming SSE responses finish, which breaks MCPServer's Streamable HTTP.
 The pure-ASGI approach (`middleware.py:20`) ensures the client stays alive
 through the entire response lifecycle.
+
+### Dual-era protocol compatibility
+The SDK routes requests by the `MCP-Protocol-Version` header: legacy handshake
+revisions (2024-11-05 … 2025-11-25) go to the session transport, anything else
+to the stateless 2026-07-28 handler, which additionally requires mirrored
+`Mcp-Method`/`Mcp-Name` headers (SEP-2243). Dual-era clients (Mistral Le Chat)
+send mixed shapes and would get 400s. `McpEraCompatMiddleware`
+(`discovery.py`) buffers the JSON-RPC body of `POST /mcp` and normalizes only
+the headers: legacy-only methods (`initialize`, `ping`,
+`notifications/initialized`) are forced to legacy routing, and modern requests
+get missing mirror headers injected from the body.
+
+### Public discovery surface
+The Server Card (SEP-2127) is served without auth at
+`/.well-known/mcp/server-card/mcp` with the
+`application/mcp-server-card+json` media type, CORS, `Cache-Control` and
+`ETag`/`If-None-Match` handling. The endpoint URL in the card is derived from
+the request's base URL, so it is correct behind a reverse proxy. Favicons
+(`static/favicon.png`, `static/favicon.ico`) are served without auth too.
 
 ### ContextVar for per-request state
 A `ContextVar[RedmineClient | None]` acts as a service locator. Tools call

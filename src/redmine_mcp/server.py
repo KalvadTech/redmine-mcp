@@ -10,6 +10,7 @@ from starlette.requests import Request
 from starlette.responses import PlainTextResponse
 from starlette.routing import Route
 
+from .discovery import McpEraCompatMiddleware, favicon_ico, favicon_png, server_card
 from .middleware import RedmineAuthMiddleware, load_base_url
 from .resources import register as register_resources
 from .tools import register_all
@@ -58,7 +59,9 @@ async def _up(request: Request) -> PlainTextResponse:
 
 def build_app(transport: httpx.AsyncBaseTransport | None = None) -> Starlette:
     """Return the ASGI app: the Streamable HTTP app wrapped with the
-    RedmineAuthMiddleware. The Redmine base URL is read once from the
+    McpEraCompatMiddleware (header normalization) and RedmineAuthMiddleware
+    (outermost, per-request auth). Public metadata routes (server card,
+    favicons, /up) bypass auth. The Redmine base URL is read once from the
     REDMINE_URL env var; missing or malformed values raise on boot.
 
     `transport` is for tests (respx). Production leaves it None so httpx uses
@@ -72,5 +75,11 @@ def build_app(transport: httpx.AsyncBaseTransport | None = None) -> Starlette:
         transport_security=_load_transport_security(),
     )
     app.routes.append(Route("/up", _up, methods=["GET"]))
+    app.routes.append(Route("/.well-known/mcp/server-card/mcp", server_card, methods=["GET"]))
+    app.routes.append(Route("/favicon.ico", favicon_ico, methods=["GET"]))
+    app.routes.append(Route("/favicon.png", favicon_png, methods=["GET"]))
+    # Starlette wraps in reverse order of add_middleware: RedmineAuthMiddleware
+    # stays outermost, McpEraCompatMiddleware runs just in front of the app.
+    app.add_middleware(McpEraCompatMiddleware)
     app.add_middleware(RedmineAuthMiddleware, base_url=base_url, transport=transport)
     return app
