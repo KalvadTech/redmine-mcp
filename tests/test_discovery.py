@@ -60,6 +60,13 @@ def test_server_card_payload(client: TestClient) -> None:
     assert header["isSecret"] is True
 
 
+def test_wellknown_mcp_json_serves_same_card(client: TestClient) -> None:
+    with client:
+        r = client.get("/.well-known/mcp.json")
+    assert r.status_code == 200
+    assert r.json()["name"] == "com.github.kalvadtech/redmine-mcp"
+
+
 def test_server_card_cors_and_caching(client: TestClient) -> None:
     with client:
         r = client.get(CARD_PATH)

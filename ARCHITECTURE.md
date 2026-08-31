@@ -72,6 +72,7 @@ __main__.py: main()
             └─ mcp.streamable_http_app(stateless_http=True, json_response=True, ...)
                  ├─ Route("/up", _up)   # health check
                  ├─ Route("/.well-known/mcp/server-card/mcp", server_card)  # public
+                 ├─ Route("/.well-known/mcp.json", server_card)             # public
                  ├─ Route("/favicon.ico" | "/favicon.png", ...)            # public
                  ├─ McpEraCompatMiddleware    # header normalization (inner)
                  └─ RedmineAuthMiddleware     # per-request auth (outermost)
@@ -140,7 +141,8 @@ get missing mirror headers injected from the body.
 
 ### Public discovery surface
 The Server Card (SEP-2127) is served without auth at
-`/.well-known/mcp/server-card/mcp` with the
+`/.well-known/mcp/server-card/mcp` and `/.well-known/mcp.json` (same document;
+some clients probe only one of the two) with the
 `application/mcp-server-card+json` media type, CORS, `Cache-Control` and
 `ETag`/`If-None-Match` handling. The endpoint URL in the card is derived from
 the request's base URL, so it is correct behind a reverse proxy. Favicons

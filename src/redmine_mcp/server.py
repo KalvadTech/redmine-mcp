@@ -76,6 +76,7 @@ def build_app(transport: httpx.AsyncBaseTransport | None = None) -> Starlette:
     )
     app.routes.append(Route("/up", _up, methods=["GET"]))
     app.routes.append(Route("/.well-known/mcp/server-card/mcp", server_card, methods=["GET"]))
+    app.routes.append(Route("/.well-known/mcp.json", server_card, methods=["GET"]))
     app.routes.append(Route("/favicon.ico", favicon_ico, methods=["GET"]))
     app.routes.append(Route("/favicon.png", favicon_png, methods=["GET"]))
     # Starlette wraps in reverse order of add_middleware: RedmineAuthMiddleware

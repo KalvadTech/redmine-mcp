@@ -15,7 +15,13 @@ _HEADER_KEY = b"x-redmine-api-key"
 _MIN_KEY_LEN = 16
 _MAX_KEY_LEN = 128
 
-_PUBLIC_PATHS = {"/up", "/.well-known/mcp/server-card/mcp", "/favicon.ico", "/favicon.png"}
+_PUBLIC_PATHS = {
+    "/up",
+    "/.well-known/mcp/server-card/mcp",
+    "/.well-known/mcp.json",
+    "/favicon.ico",
+    "/favicon.png",
+}
 
 
 class RedmineAuthMiddleware:
