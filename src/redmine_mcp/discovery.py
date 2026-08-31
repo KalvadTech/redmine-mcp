@@ -131,9 +131,7 @@ def _has_header(headers: list[tuple[bytes, bytes]], name: bytes) -> bool:
     return any(k == name for k, _ in headers)
 
 
-def _compat_headers(
-    headers: list[tuple[bytes, bytes]], body: bytes
-) -> list[tuple[bytes, bytes]]:
+def _compat_headers(headers: list[tuple[bytes, bytes]], body: bytes) -> list[tuple[bytes, bytes]]:
     """Rewrite routing headers so the SDK's era router accepts the request.
 
     The SDK routes on `MCP-Protocol-Version` alone and the modern handler then
