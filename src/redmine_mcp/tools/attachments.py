@@ -4,6 +4,7 @@ import base64
 from typing import Any
 
 from mcp.server.mcpserver import MCPServer
+from mcp.server.mcpserver.exceptions import ToolError
 
 from ._common import client
 
@@ -34,7 +35,7 @@ def register(mcp: MCPServer) -> None:
         attachment = meta.get("attachment", meta)
         content_url = attachment.get("content_url")
         if not content_url:
-            raise ValueError(f"attachment {id} has no content_url")
+            raise ToolError(f"attachment {id} has no content_url")
         content, content_type = await c.get_bytes(content_url, max_bytes=cap)
         return {
             "id": id,
@@ -59,7 +60,7 @@ def register(mcp: MCPServer) -> None:
         try:
             content = base64.b64decode(content_base64, validate=True)
         except (ValueError, TypeError) as exc:
-            raise ValueError("content_base64 is not valid base64") from exc
+            raise ToolError("content_base64 is not valid base64") from exc
         data = await client().post_octet_stream(
             "/uploads.json",
             content=content,

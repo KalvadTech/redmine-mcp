@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from mcp.server.mcpserver import MCPServer
+from mcp.server.mcpserver.exceptions import ToolError
 
 from ._common import client
 
@@ -55,7 +56,7 @@ def register(mcp: MCPServer) -> None:
         """Log time on an issue or project. Provide exactly one of issue_id
         or project_id. spent_on is YYYY-MM-DD; defaults to today on Redmine."""
         if (issue_id is None) == (project_id is None):
-            raise ValueError("provide exactly one of issue_id or project_id")
+            raise ToolError("provide exactly one of issue_id or project_id")
         body: dict[str, Any] = {
             "hours": hours,
             "activity_id": activity_id,

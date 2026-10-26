@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
+from mcp.server.mcpserver.exceptions import ToolError
 
-class RedmineError(Exception):
+
+class RedmineError(ToolError):
     """Raised when Redmine returns a non-2xx response."""
 
     def __init__(

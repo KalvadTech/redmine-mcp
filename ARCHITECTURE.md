@@ -46,9 +46,10 @@ tests/                   # pytest + respx (HTTP mocking), 27 files
   Provides `get_json`, `post_json`, `put_json`, `delete`, `paginate`,
   `post_octet_stream`, `get_bytes`. One instance per request. Context manager
   (`__aenter__`/`__aexit__`). Owns its own `httpx.AsyncClient`.
-- **`RedmineError`** (`errors.py:6`) — raised on non-2xx Redmine responses.
-  Fields: `status`, `message`, `errors: list[str]`, `body`.
-- **`AuthHeaderError`** (`errors.py:28`) — raised on missing/invalid
+- **`RedmineError`** (`errors.py:8`): raised on non-2xx Redmine responses.
+  Fields: `status`, `message`, `errors: list[str]`, `body`. It subclasses MCP
+  `ToolError`, so Redmine messages remain visible in tool responses.
+- **`AuthHeaderError`** (`errors.py:30`): raised on missing/invalid
   credentials (`Authorization: Bearer` or `X-Redmine-API-Key`). Status 401.
 - **`RedmineAuthMiddleware`** (`middleware.py:20`) — pure-ASGI middleware.
   Extracts API key → validates → creates `RedmineClient` → binds to
@@ -179,11 +180,11 @@ for uvicorn binding (`--host`, `--port`, `--log-level`).
 
 | Package | Usage |
 |---------|-------|
-| `mcp[cli]==2.0.0` | MCPServer, `@mcp.tool()` decorator, JSON-RPC dispatch, `TransportSecuritySettings` |
+| `mcp[cli]==2.3.0` | MCPServer, `@mcp.tool()` decorator, JSON-RPC dispatch, `TransportSecuritySettings` |
 | `httpx==0.28.1` | Async HTTP client for Redmine API. `RedmineClient` owns one `AsyncClient` per request |
-| `starlette==1.6.0` | ASGI app, routing (`/up` health check), `PlainTextResponse` |
-| `uvicorn[standard]==0.52.3` | ASGI server, launched from `__main__.py` |
-| `pydantic==2.13.4` | Transitive dependency of `mcp` (not used directly) |
+| `starlette==1.10.0` | ASGI app, routing (`/up` health check), `PlainTextResponse` |
+| `uvicorn[standard]==0.54.0` | ASGI server, launched from `__main__.py` |
+| `pydantic==2.14.1` | Transitive dependency of `mcp` (not used directly) |
 | `pytest`, `pytest-asyncio`, `respx` | Test framework + HTTP mocking |
 | `ruff`, `mypy` | Linting + strict type checking |
 

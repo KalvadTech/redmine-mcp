@@ -33,11 +33,11 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "mcp[cli]==2.0.0",
+    "mcp[cli]==2.3.0",
     "httpx==0.28.1",
-    "pydantic==2.13.4",
-    "starlette==1.6.0",
-    "uvicorn[standard]==0.52.3",
+    "pydantic==2.14.1",
+    "starlette==1.10.0",
+    "uvicorn[standard]==0.54.0",
 ]
 
 [project.urls]
@@ -59,10 +59,10 @@ packages = ["src/redmine_mcp"]
 [dependency-groups]
 dev = [
     "pytest==9.1.1",
-    "pytest-asyncio==1.4.0",
+    "pytest-asyncio==1.4.1",
     "respx==0.23.1",
-    "ruff==0.16.3",
-    "mypy==2.3.1",
+    "ruff==0.17.2",
+    "mypy==2.4.0",
 ]
 
 [tool.ruff]

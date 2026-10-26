@@ -4,6 +4,7 @@ import base64
 from typing import Any
 
 from mcp.server.mcpserver import MCPServer
+from mcp.server.mcpserver.exceptions import ToolError
 
 from ._common import client
 
@@ -32,7 +33,7 @@ def register(mcp: MCPServer) -> None:
         try:
             content = base64.b64decode(content_base64, validate=True)
         except (ValueError, TypeError) as exc:
-            raise ValueError("content_base64 is not valid base64") from exc
+            raise ToolError("content_base64 is not valid base64") from exc
 
         c = client()
         upload = await c.post_octet_stream(
@@ -43,7 +44,7 @@ def register(mcp: MCPServer) -> None:
         )
         token = (upload or {}).get("upload", {}).get("token")
         if not token:
-            raise ValueError("upload returned no token")
+            raise ToolError("upload returned no token")
 
         body: dict[str, Any] = {
             "token": token,

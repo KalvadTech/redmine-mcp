@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from mcp.server.mcpserver import MCPServer
+from mcp.server.mcpserver.exceptions import ToolError
 
 from ._common import client
 
@@ -38,7 +39,7 @@ def register(mcp: MCPServer) -> None:
         """Add a user or a group to a project with the given role ids.
         Provide exactly one of user_id or group_id."""
         if (user_id is None) == (group_id is None):
-            raise ValueError("provide exactly one of user_id or group_id")
+            raise ToolError("provide exactly one of user_id or group_id")
         body: dict[str, Any] = {"role_ids": role_ids}
         if user_id is not None:
             body["user_id"] = user_id
