@@ -35,7 +35,7 @@ classifiers = [
 dependencies = [
     "mcp[cli]==2.3.0",
     "httpx==0.28.1",
-    "pydantic==2.14.1",
+    "pydantic==2.14.2",
     "starlette==1.10.0",
     "uvicorn[standard]==0.54.0",
 ]
@@ -58,11 +58,11 @@ packages = ["src/redmine_mcp"]
 
 [dependency-groups]
 dev = [
-    "pytest==9.1.1",
-    "pytest-asyncio==1.4.1",
+    "pytest==9.2.0",
+    "pytest-asyncio==1.4.1.post1",
     "respx==0.23.1",
-    "ruff==0.17.2",
-    "mypy==2.4.0",
+    "ruff==0.17.3",
+    "mypy==2.4.1",
 ]
 
 [tool.ruff]
@@ -89,5 +89,6 @@ warn_return_any = false
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 addopts = "-q"
 testpaths = ["tests"]

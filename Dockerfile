@@ -1,7 +1,7 @@
-FROM python:3.14.9-alpine3.24
+FROM python:3.14.10-alpine3.24
 
 RUN apk add --no-cache build-base libffi-dev openssl-dev rust cargo curl wget \
-    && pip install --no-cache-dir uv==0.13.5 \
+    && pip install --no-cache-dir uv==0.13.7 \
     && addgroup -S redmine \
     && adduser -S -G redmine -u 10001 redmine
 

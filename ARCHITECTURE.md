@@ -184,7 +184,7 @@ for uvicorn binding (`--host`, `--port`, `--log-level`).
 | `httpx==0.28.1` | Async HTTP client for Redmine API. `RedmineClient` owns one `AsyncClient` per request |
 | `starlette==1.10.0` | ASGI app, routing (`/up` health check), `PlainTextResponse` |
 | `uvicorn[standard]==0.54.0` | ASGI server, launched from `__main__.py` |
-| `pydantic==2.14.1` | Transitive dependency of `mcp` (not used directly) |
+| `pydantic==2.14.2` | Transitive dependency of `mcp` (not used directly) |
 | `pytest`, `pytest-asyncio`, `respx` | Test framework + HTTP mocking |
 | `ruff`, `mypy` | Linting + strict type checking |
 
